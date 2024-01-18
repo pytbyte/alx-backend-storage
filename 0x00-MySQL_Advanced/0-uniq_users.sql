@@ -1,4 +1,5 @@
--- Create the 'users' table if it does not exist
+-- Create the 'users' table 
+-- if it does not exist
 
 DROP TABLE IF EXISTS users;
 CREATE TABLE users (
