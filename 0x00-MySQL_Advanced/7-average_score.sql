@@ -25,7 +25,7 @@ BEGIN
 
     -- Update the mean in the users table
     UPDATE users
-    SET mean = mean
+    SET average_score = mean
     WHERE id = user_id_;
 END;
 //
