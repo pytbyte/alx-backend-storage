@@ -3,7 +3,7 @@ DROP PROCEDURE IF EXISTS ComputeAverageScoreForUser;
 DELIMITER //
 
 CREATE PROCEDURE ComputeAverageScoreForUser(
-    IN user_id INT
+    IN user_id_ INT
 )
 BEGIN
     DECLARE marks INT;
@@ -14,7 +14,7 @@ BEGIN
     SELECT SUM(score), COUNT(project_id)
     INTO marks, projects
     FROM corrections
-    WHERE user_id = user_id;
+    WHERE user_id = user_id_;
 
     -- Compute the average score
     IF projects > 0 THEN
@@ -26,7 +26,7 @@ BEGIN
     -- Update the mean in the users table
     UPDATE users
     SET mean = mean
-    WHERE id = user_id;
+    WHERE id = user_id_;
 END;
 //
 
