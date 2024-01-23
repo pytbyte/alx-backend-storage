@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+'''top_students module.
+'''
 def top_students(mongo_collection):
     '''Returns all students in a collection sorted by average score.
     '''
