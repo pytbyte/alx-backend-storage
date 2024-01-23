@@ -3,23 +3,31 @@
 '''
 from pymongo import MongoClient
 
-
-def print_nginx_request_logs():
-    '''Prints stats about Nginx request logs.
+def log_stats():
+    '''Prints stats about Nginx logs in MongoDB.
     '''
-    client = MongoClient('mongodb://127.0.0.1:27017')
-    nginx_collection = client.logs.nginx
-    print('{} logs'.format(nginx_collection.count_documents({})))
-    print('Methods:')
-    methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
-    for method in methods:
-        req_count = len(list(nginx_collection.find({'method': method})))
-        print('\tmethod {}: {}'.format(method, req_count))
-    status_checks_count = len(list(
-        nginx_collection.find({'method': 'GET', 'path': '/status'})
-    ))
-    print('{} status check'.format(status_checks_count))
+    try:
+        # Connect to MongoDB
+        client = MongoClient('mongodb://127.0.0.1:27017')
+        nginx_collection = client.logs.nginx
 
+        # Display total logs count
+        total_logs_count = nginx_collection.count_documents({})
+        print(f'{total_logs_count} logs')
+
+        # Display request methods count
+        print('Methods:')
+        methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+        for method in methods:
+            req_count = nginx_collection.count_documents({'method': method})
+            print(f'\tmethod {method}: {req_count}')
+
+        # Display status checks count
+        status_checks_count = nginx_collection.count_documents({'method': 'GET', 'path': '/status'})
+        print(f'{status_checks_count} status check')
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 if __name__ == '__main__':
-    print_nginx_request_logs()
+    log_stats()
