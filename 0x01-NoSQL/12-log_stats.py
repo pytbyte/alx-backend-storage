@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-'''print_nginx_request_logs module.
+'''Task 12's module.
 '''
 from pymongo import MongoClient
 
