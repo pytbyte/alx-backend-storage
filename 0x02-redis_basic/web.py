@@ -1,34 +1,41 @@
 #!/usr/bin/env python3
-""" expiring web cache module """
+"""
+    Module: Redis Cache Counting with Expiration
+"""
 
+from functools import wraps
 import redis
 import requests
 from typing import Callable
-from functools import wraps
 
-redis = redis.Redis()
+redis_cache = redis.Redis()
 
 
-def wrap_requests(fn: Callable) -> Callable:
-    """ Decorator wrapper """
-
-    @wraps(fn)
+def count_requests(method: Callable) -> Callable:
+    """
+        Decortator for cache counting with expiration
+    """
+    @wraps(method)
     def wrapper(url):
-        """ Wrapper for decorator guy """
-        redis.incr(f"count:{url}")
-        cached_response = redis.get(f"cached:{url}")
-        if cached_response:
-            return cached_response.decode('utf-8')
-        result = fn(url)
-        redis.setex(f"cached:{url}", 10, result)
-        return result
+        """
+            Wrapper for decorator
+        """
+        redis_cache.incr(f"count:{url}")
+        html = redis_cache.get(f"cached:{url}")
+        if html:
+            return html.decode('utf-8')
+        html_ = method(url)
+        redis_cache.setex(f"cached:{url}", 10, html_)
+        return html_
 
     return wrapper
 
 
-@wrap_requests
+@count_requests
 def get_page(url: str) -> str:
-    """get page self descriptive
     """
-    response = requests.get(url)
-    return response.text
+        The function uses the requests module to obtain the HTML content of a
+        particular URL and returns it
+    """
+    results = requests.get(url)
+    return results.text
