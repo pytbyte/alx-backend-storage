@@ -1,36 +1,43 @@
-import requests
+#!/usr/bin/env python3
+'''
+A module providing tools for request caching and tracking.
+'''
 import redis
+import requests
+from functools import wraps
+from typing import Callable
 
 
+redis_store = redis.Redis()
+'''
+The module-level Redis instance.
+'''
+
+
+def data_cacher(method: Callable) -> Callable:
+    '''
+    Decorator that caches the output of fetched data.
+    '''
+    @wraps(method)
+    def invoker(url) -> str:
+        '''
+        Wrapper function for caching the output.
+        '''
+        redis_store.incr(f'count:{url}')
+        result = redis_store.get(f'result:{url}')
+        if result:
+            return result.decode('utf-8')
+        result = method(url)
+        redis_store.set(f'count:{url}', 0)
+        redis_store.setex(f'result:{url}', 10, result)
+        return result
+    return invoker
+
+
+@data_cacher
 def get_page(url: str) -> str:
-    """
-    Retrieves the HTML content of a given URL
-    tracks the access count, and caches the result
-    with expiration.
-
-    Args:
-        url (str): The URL to fetch the HTML content from.
-
-    Returns:
-        str: The HTML content of the specified URL.
-    """
-    # Initialize Redis client
-    redis_client = redis.Redis()
-
-    # Increment access count
-    url_count_key = f"count:{url}"
-    redis_client.incr(url_count_key)
-
-    # Check if the page is cached
-    cached_data = redis_client.get(url)
-    if cached_data is not None:
-        return cached_data.decode("utf-8")
-
-    # If not cached, fetch the page using requests
-    response = requests.get(url)
-    html_content = response.text
-
-    # Cache the result with an expiration time of 10 seconds
-    redis_client.setex(url, 10, html_content)
-
-    return html_content
+    '''
+    Returns the content of a URL after caching the request's response
+    and tracking the request.
+    '''
+    return requests.get(url).text
