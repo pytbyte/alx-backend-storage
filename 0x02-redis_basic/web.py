@@ -1,41 +1,44 @@
 #!/usr/bin/env python3
-"""
-    Module: Redis Cache Counting with Expiration
-"""
+'''
+A module providing tools for request caching and tracking.
+'''
 
-from functools import wraps
+
 import redis
 import requests
+from functools import wraps
 from typing import Callable
 
-redis_cache = redis.Redis()
+redis_store = redis.Redis()
+'''
+The module-level Redis instance.
+'''
 
 
-def count_requests(method: Callable) -> Callable:
-    """
-        Decortator for cache counting with expiration
-    """
+def data_cacher(method: Callable) -> Callable:
+    '''
+    Decorator that caches the output of fetched data.
+    '''
     @wraps(method)
-    def wrapper(url):
-        """
-            Wrapper for decorator
-        """
-        redis_cache.incr(f"count:{url}")
-        html = redis_cache.get(f"cached:{url}")
-        if html:
-            return html.decode('utf-8')
-        html_ = method(url)
-        redis_cache.setex(f"cached:{url}", 10, html_)
-        return html_
+    def invoker(url) -> str:
+        '''
+        Wrapper function for caching the output.
+        '''
+        redis_store.incr(f'count:{url}')
+        result = redis_store.get(f'result:{url}')
+        if result:
+            return result.decode('utf-8')
+        result = method(url)
+        redis_store.set(f'count:{url}', 0)
+        redis_store.setex(f'result:{url}', 10, result)
+        return result
+    return invoker
 
-    return wrapper
 
-
-@count_requests
+@data_cacher
 def get_page(url: str) -> str:
-    """
-        The function uses the requests module to obtain the HTML content of a
-        particular URL and returns it
-    """
-    results = requests.get(url)
-    return results.text
+    '''
+    Returns the content of a URL after caching the request's response
+    and tracking the request.
+    '''
+    return requests.get(url).text
